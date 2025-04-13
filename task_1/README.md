@@ -105,3 +105,4 @@ kafka-topics.sh --bootstrap-server localhost:9092 --describe --topic balanced_to
 ```
 #### Результат запроса:
 ![total](screenshots/screen_10.png)
+#### В ответе видно, что брокер `kafka-1` тоже стал использоваться как лидер.
