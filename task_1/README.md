@@ -15,13 +15,13 @@ docker exec -it kafka-0 bash
 kafka-topics.sh --bootstrap-server localhost:9092 --topic balanced_topic --create --partitions 8 --replication-factor 3 --if-not-exists
 ```
 #### Результат:
-![total]scrin_1.png]
+![total](screenshot/screen_1.png)
 ### 1.3) Получаем подробную информацию о топике `balanced_topic` командой:
 ```
 kafka-topics.sh --bootstrap-server localhost:9092 --describe --topic balanced_topic
 ```
 #### Результат запроса:
-![total]scrin_2.png]
+![total](screenshot/screen_2.png)
 ### 1.4) В дирректории `tmp` создадим файл reassignment.json  командой:
 ```
 echo '{
@@ -47,19 +47,19 @@ kafka-reassign-partitions.sh \
 --generate
 ```
 #### Результатом выполнения команд будет план переназначения разделов:
-![total]scrin_3.png]
+![total](screenshot/screen_3.png)
 ### 1.6) Реализуем план переназначения разделов командой:
 ```
 kafka-reassign-partitions.sh --bootstrap-server localhost:9092 --reassignment-json-file /tmp/reassignment.json --execute
 ```
 #### Результат запроса:
-![total]scrin_4.png]
+![total](screenshot/screen_4.png)
 ### 1.7) Получаем подробную информацию о топике `balanced_topic` командой:
 ```
 kafka-topics.sh --bootstrap-server localhost:9092 --describe --topic balanced_topic
 ```
 #### Результат запроса:
-![total]scrin_5.png]
+![total](screenshot/screen_5.png)
 
 ### 2) Моделирование сбоя брокера:
 ### 2.1) Останавливаем брокер `kafka-1` командой:
@@ -71,13 +71,13 @@ docker stop kafka-1
 docker ps
 ```
 #### Результат запроса:
-![total]scrin_6.png]
+![total](screenshot/screen_6.png)
 ### 2.2) Получаем подробную информацию о топике `balanced_topic` командой:
 ```
 kafka-topics.sh --bootstrap-server localhost:9092 --describe --topic balanced_topic
 ```
 #### Результат запроса:
-![total]scrin_7.png]
+![total](screenshot/screen_7.png)
 ### 2.3) Запускаем брокер `kafka-1` командой:
 ```
 docker start kafka-1
@@ -87,13 +87,13 @@ docker start kafka-1
 docker ps
 ```
 #### Результат запроса:
-![total]scrin_8.png]
+![total](screenshot/screen_8.png)
 ### 2.4) Получаем подробную информацию о топике `balanced_topic` командой:
 ```
 kafka-topics.sh --bootstrap-server localhost:9092 --describe --topic balanced_topic
 ```
 #### Результат запроса:
-![total]scrin_9.png]
+![total](screenshot/screen_9.png)
 #### В ответе видно, что брокер `kafka-1` не используется как лидер.
 ### 2.5) Запускаем выбор предпочтительного лидера для всех топиков командой:
 ```
@@ -104,4 +104,4 @@ kafka-leader-election.sh --bootstrap-server localhost:9092 --election-type PREFE
 kafka-topics.sh --bootstrap-server localhost:9092 --describe --topic balanced_topic
 ```
 #### Результат запроса:
-![total]scrin_10.png]
+![total](screenshot/screen_10.png)
