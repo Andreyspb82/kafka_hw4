@@ -1,0 +1,116 @@
+version: "2"
+services:
+ zookeeper:
+   ports:
+     - 2181:2181
+   container_name: zookeeper
+   networks:
+     - confluent
+   image: confluentinc/cp-zookeeper:7.4.4
+   environment:
+     ZOOKEEPER_SERVER_ID: 1  
+     ZOOKEEPER_CLIENT_PORT: 2181
+     ZOOKEEPER_REQUIRE_CLIENT_AUTH_SCHEME: "sasl"
+     ZOOKEEPER_AUTH_PROVIDER_1: "org.apache.zookeeper.server.auth.SASLAuthenticationProvider"
+     ZOOKEEPER_SASL_ENABLED: "true"
+     KAFKA_OPTS:
+       -Djava.security.auth.login.config=/etc/zookeeper/secrets/zookeeper.sasl.jaas.conf
+       -Dquorum.cnxn.threads.size=20
+       -Dzookeeper.authProvider.1=org.apache.zookeeper.server.auth.SASLAuthenticationProvider
+       -Dzookeeper.allowSaslFailedClients=false
+       -DjaasLoginRenew=3600000
+   volumes:
+     - ./zookeeper_jaas:/etc/zookeeper/secrets   
+
+ x-kafka-common:
+   &kafka-common
+   image: confluentinc/cp-kafka:7.4.4
+   networks:
+     - confluent
+   depends_on:
+     - zookeeper   
+   environment:
+    &kafka-common-env
+     KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: EXTERNAL:SASL_SSL,SASL_PLAINTEXT:SASL_PLAINTEXT
+     KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+     KAFKA_ZOOKEEPER_SASL_CLIENT: true
+     KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+     KAFKA_DELETE_TOPIC_ENABLE: "true"
+     KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+     KAFKA_SSL_CLIENT_AUTH: required    
+     KAFKA_SECURITY_PROTOCOL: "SSL"
+     KAFKA_AUTHORIZER_CLASS_NAME: kafka.security.authorizer.AclAuthorizer
+     KAFKA_INTER_BROKER_LISTENER_NAME: SASL_PLAINTEXT     
+     KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL: PLAIN
+     KAFKA_SASL_ENABLED_MECHANISMS: PLAIN
+     KAFKA_LOG4J_ROOT_LOGLEVEL: "INFO"
+     KAFKA_OPTS: "-Djava.security.auth.login.config=/etc/kafka/jaas/kafka_server_jaas.conf"
+     KAFKA_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM: https
+     KAFKA_SUPER_USERS: "User:admin"
+
+ 
+ kafka-1:
+   <<: *kafka-common  
+   container_name: kafka-1
+   ports:
+     - 9092:9092
+     - 9093:9093 
+   environment:
+     <<: *kafka-common-env
+     KAFKA_BROKER_ID: 1
+     KAFKA_LISTENERS: EXTERNAL://0.0.0.0:9092,SASL_PLAINTEXT://0.0.0.0:9093
+     KAFKA_ADVERTISED_LISTENERS: EXTERNAL://kafka-1:9092,SASL_PLAINTEXT://kafka-1:9093     
+     KAFKA_SSL_KEYSTORE_FILENAME: kafka-1.keystore.jks
+     KAFKA_SSL_KEYSTORE_CREDENTIALS: kafka-1_credentials
+     KAFKA_SSL_KEY_CREDENTIALS: kafka-1_credentials
+     KAFKA_SSL_TRUSTSTORE_FILENAME: kafka.kafka-1.truststore.jks
+     KAFKA_SSL_TRUSTSTORE_CREDENTIALS: kafka-1_credentials    
+   volumes:
+     - ./kafka_jaas:/etc/kafka/jaas
+     - ./kafka-1-creds:/etc/kafka/secrets    
+     - ./configs:/tmp/configs
+
+ kafka-2:
+   <<: *kafka-common 
+   container_name: kafka-2
+   ports:
+     - 9094:9094
+     - 9095:9095
+   environment:
+     <<: *kafka-common-env
+     KAFKA_BROKER_ID: 2
+     KAFKA_LISTENERS: EXTERNAL://0.0.0.0:9094,SASL_PLAINTEXT://0.0.0.0:9095
+     KAFKA_ADVERTISED_LISTENERS: EXTERNAL://kafka-2:9094,SASL_PLAINTEXT://kafka-2:9095
+     KAFKA_SSL_KEYSTORE_FILENAME: kafka-2.keystore.jks
+     KAFKA_SSL_KEYSTORE_CREDENTIALS: kafka-2_credentials
+     KAFKA_SSL_KEY_CREDENTIALS: kafka-2_credentials
+     KAFKA_SSL_TRUSTSTORE_FILENAME: kafka.kafka-2.truststore.jks
+     KAFKA_SSL_TRUSTSTORE_CREDENTIALS: kafka-2_credentials
+   volumes:
+     - ./kafka_jaas:/etc/kafka/jaas
+     - ./kafka-2-creds:/etc/kafka/secrets  
+
+ kafka-3:
+   <<: *kafka-common 
+   container_name: kafka-3
+   ports:
+     - 9096:9096
+     - 9097:9097
+   environment:
+     <<: *kafka-common-env
+     KAFKA_BROKER_ID: 3
+     KAFKA_LISTENERS: EXTERNAL://0.0.0.0:9096,SASL_PLAINTEXT://0.0.0.0:9097
+     KAFKA_ADVERTISED_LISTENERS: EXTERNAL://kafka-3:9096,SASL_PLAINTEXT://kafka-3:9097
+     KAFKA_SSL_KEYSTORE_FILENAME: kafka-3.keystore.jks
+     KAFKA_SSL_KEYSTORE_CREDENTIALS: kafka-3_credentials
+     KAFKA_SSL_KEY_CREDENTIALS: kafka-3_credentials
+     KAFKA_SSL_TRUSTSTORE_FILENAME: kafka.kafka-3.truststore.jks
+     KAFKA_SSL_TRUSTSTORE_CREDENTIALS: kafka-3_credentials     
+   volumes:
+     - ./kafka_jaas:/etc/kafka/jaas
+     - ./kafka-3-creds:/etc/kafka/secrets  
+
+
+networks:
+ confluent:
+   driver: bridge
